@@ -252,11 +252,3 @@ If you find this repository useful in your research, please cite:
 
 This project is released under the MIT License.
 
----
-
-## Author
-
-**Bahareh Kaviani Baghbaderani**
-
-- GitHub: https://github.com/baharehkaviani75
-- LinkedIn: https://www.linkedin.com/in/bahareh-kaviani-baghbaderani/
