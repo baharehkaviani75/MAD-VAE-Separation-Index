@@ -1,0 +1,20 @@
+# datasets
+data/*.npy
+
+# checkpoints
+checkpoints/*.pt
+
+# results
+results/*.json
+results/*.png
+
+# python
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+
+# logs
+*.log
