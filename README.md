@@ -1,234 +1,262 @@
 # MAD-VAE: Separation Index Analysis for Adversarial Robustness
 
-Official implementation for evaluating adversarial robustness through latent space analysis using **MAD-VAE (Manifold-Adaptive Deep Variational Autoencoder)** and the **Separation Index (SI)**.
+Official PyTorch implementation of **MAD-VAE (Manifold-Adaptive Deep Variational Autoencoder)** for evaluating adversarial robustness through latent space analysis using the **Separation Index (SI)**.
 
-This repository provides:
-- MAD-VAE models for robust representation learning
-- Adversarial attack evaluation
-- Latent space visualization using UMAP
-- Separation Index computation for measuring class separability
+This repository provides a complete framework for:
 
+- Training clean and adversarially trained MAD-VAE models
+- Generating adversarial examples (FGSM, R-FGSM, MI-FGSM, PGD)
+- Measuring latent class separability using the Separation Index (SI)
+- Visualizing latent representations with UMAP
+- Comparing clean and adversarial latent spaces across multiple datasets
+
+---
 
 ## Overview
 
-Deep neural networks are vulnerable to adversarial perturbations that can significantly alter their predictions.
+Deep neural networks are highly vulnerable to adversarial perturbations, which can significantly degrade classification performance while remaining visually imperceptible.
 
-This project investigates robustness from a latent representation perspective:
+Rather than evaluating robustness only through classification accuracy, this project investigates how adversarial attacks affect the **structure of the latent representation**.
 
-1. Train clean and adversarially trained models.
-2. Extract deterministic latent representations (μ).
-3. Evaluate latent class separation using Separation Index (SI).
-4. Analyze the effect of adversarial attacks on latent manifolds.
+The workflow consists of:
 
+1. Training a clean or adversarially trained MAD-VAE.
+2. Extracting deterministic latent representations using the encoder mean (**μ**).
+3. Computing the **Separation Index (SI)** to quantify class separability.
+4. Visualizing the latent space using **UMAP**.
 
-The main pipeline is:
+Using the latent mean (μ) instead of sampled latent vectors ensures deterministic and reproducible evaluations.
 
+---
 
-Input Image
-|
-|
-Adversarial Attack
-(FGSM / R-FGSM / MI-FGSM / PGD)
-|
-|
-MAD-VAE Encoder
-|
-|
-Latent Representation μ
-|
-|
-+----------------+
-| |
-SI Evaluation UMAP Visualization
-| |
-+----------------+
+## Pipeline
 
+```
+                Input Images
+                      │
+                      ▼
+        Adversarial Attack (Optional)
+      FGSM • R-FGSM • MI-FGSM • PGD
+                      │
+                      ▼
+              MAD-VAE Encoder
+                      │
+                      ▼
+          Deterministic Latent Mean (μ)
+                 ┌──────────────┐
+                 │              │
+                 ▼              ▼
+      Separation Index       UMAP
+        Quantitative      Visualization
+```
 
+---
 
 ## Features
 
 - Deterministic latent representation using encoder mean (μ)
+- Separation Index implementation with batched computation
 - Support for clean-trained and adversarially trained models
-- Adversarial attack evaluation:
-    - FGSM
-    - R-FGSM
-    - MI-FGSM
-    - PGD
-
-- Dataset-dependent perturbation strength (epsilon)
+- Multiple adversarial attacks:
+  - FGSM
+  - R-FGSM
+  - MI-FGSM
+  - PGD
+- Automatic dataset-dependent attack strength (epsilon)
 - GPU acceleration
 - Reproducible experiments with fixed random seeds
-- Batched Separation Index computation
-- Latent space visualization with UMAP
+- Publication-quality latent space visualizations
 
+---
 
 ## Repository Structure
 
-
+```
 MAD-VAE-Separation-Index/
-
+│
 ├── models/
-│ ├── madvae_mnist.py
-│ └── madvae_resnet.py
+│   ├── madvae_mnist.py
+│   └── madvae_resnet.py
 │
 ├── utils/
-│ ├── dataset.py
-│ ├── adversarial.py
-│ ├── separation_index.py
-│ ├── loss_function.py
-│ └── scheduler.py
+│   ├── adversarial.py
+│   ├── dataset.py
+│   ├── loss_function.py
+│   ├── scheduler.py
+│   └── separation_index.py
 │
 ├── train/
-│ ├── train_madvae.py
-│ └── train_clean.py
+│   ├── train_clean.py
+│   └── train_madvae.py
 │
 ├── evaluation/
-│ └── evaluate_si.py
+│   └── evaluate_si.py
 │
 ├── visualization/
-│ └── visualize_latent.py
+│   └── visualize_latent.py
 │
-├── data/
 ├── checkpoints/
+├── data/
 ├── results/
 │
-├── requirements.txt
 ├── README.md
+├── requirements.txt
 └── .gitignore
+```
 
+---
 
-
-# Installation
+## Installation
 
 Clone the repository:
 
 ```bash
-git clone https://github.com/your_username/MAD-VAE-Separation-Index.git
+git clone https://github.com/baharehkaviani75/MAD-VAE-Separation-Index.git
 
 cd MAD-VAE-Separation-Index
+```
 
-Install dependencies:
+Install the required packages:
 
+```bash
 pip install -r requirements.txt
-Requirements
-Python >= 3.9
-PyTorch >= 2.0
-CUDA recommended
-Dataset Preparation
+```
 
-The repository expects preprocessed numpy datasets:
+---
 
+## Supported Datasets
+
+The framework currently supports:
+
+| Dataset | Classes | Image Size |
+|---------|---------|------------|
+| MNIST | 10 | 28 × 28 |
+| CIFAR-10 | 10 | 32 × 32 |
+| SVHN | 10 | 32 × 32 |
+| GTSRB | 43 | 32 × 32 |
+| CelebA (Binary) | 2 | 32 × 32 |
+
+Datasets should be stored as NumPy arrays:
+
+```
 data/
-
 ├── xs_mnist.npy
 ├── ys_mnist.npy
-
 ├── xs_cifar.npy
 ├── ys_cifar.npy
-
 ...
+```
 
-Each dataset contains:
+---
 
-xs_*.npy: images
-ys_*.npy: labels
+## Training
 
-Supported datasets:
+### Clean Training
 
-Dataset	Classes	Image Size
-MNIST	10	28×28
-CIFAR-10	10	32×32
-SVHN	10	32×32
-GTSRB	43	32×32
-CelebA subset	2	32×32
-Training
-Clean Training
+```bash
+python train/train_clean.py --dataset mnist
+```
 
-Example:
+### Adversarial Training
 
-python train/train_clean.py \
---dataset mnist
-MAD-VAE Adversarial Training
-
-Example:
-
+```bash
 python train/train_madvae.py \
---dataset mnist \
---attack pgd
-Separation Index Evaluation
+    --dataset mnist \
+    --attack pgd
+```
 
-Evaluate latent class separation:
+---
 
+## Separation Index Evaluation
+
+Evaluate latent class separability:
+
+```bash
 python evaluation/evaluate_si.py \
---dataset mnist \
---model_type madvae \
---model_path checkpoints/mnist/madvae_pgd.pt \
---attack pgd
+    --dataset mnist \
+    --model_type madvae \
+    --model_path checkpoints/mnist/madvae_pgd.pt \
+    --attack pgd
+```
 
 Example output:
 
-Dataset:           MNIST
-Model:             madvae
-Attack:            pgd
+```
+Dataset: MNIST
+Model: MAD-VAE
+Attack: PGD
 
-Feature type:      latent mean (μ)
+Feature Representation : μ
 
-Separation Index:  0.842351
+Separation Index (SI): 0.842351
+```
 
-Results are saved as:
+Evaluation results are automatically saved as JSON files.
 
-results/si/
-Latent Space Visualization
+---
 
-Generate UMAP visualization:
+## Latent Space Visualization
 
+Generate UMAP visualizations of the latent space:
+
+```bash
 python visualization/visualize_latent.py \
---dataset cifar \
---model_type madvae \
---model_path checkpoints/cifar/madvae_pgd.pt \
---attack pgd
+    --dataset mnist \
+    --model_type madvae \
+    --model_path checkpoints/mnist/madvae_pgd.pt \
+    --attack pgd
+```
 
-Output:
+The resulting figures are saved in:
 
-results/figures/
+```
+results/
+```
 
-cifar_madvae_pgd_latent_mu_umap.png
-Adversarial Attacks
+---
 
-Supported attacks:
+## Methodology
 
-Attack	Description
-FGSM	Fast Gradient Sign Method
-R-FGSM	Randomized FGSM
-MI-FGSM	Momentum Iterative FGSM
-PGD	Projected Gradient Descent
+Instead of using stochastic latent samples
 
-Example:
+```
+z = μ + σϵ
+```
 
---attack pgd
---epsilon 0.031
-Methodology
+this implementation extracts the deterministic latent representation
 
-The latent representation is extracted as:
+```
+z = μ
+```
 
-z=μ(x)
+to ensure stable and reproducible Separation Index measurements.
 
-Instead of sampling:
+---
 
-z=μ+σϵ
+## Citation
 
-the deterministic latent mean is used to ensure reproducible SI measurement.
+If you find this repository useful in your research, please cite:
 
-Citation
-
-If you use this repository, please cite:
-
-@inproceedings{density2023,
-title={Density Estimation Helps Adversarial Robustness},
-author={Kaviani Baghbaderani, Bahareh},
-booktitle={13th International Conference on Computer and Knowledge Engineering},
-year={2023}
+```bibtex
+@inproceedings{kaviani2023density,
+  title={Density Estimation Helps Adversarial Robustness},
+  author={Kaviani Baghbaderani, Bahareh},
+  booktitle={13th International Conference on Computer and Knowledge Engineering (ICCKE)},
+  year={2023}
 }
-License
+```
 
-This project is released for research purposes.
+---
+
+## License
+
+This project is released under the MIT License.
+
+---
+
+## Author
+
+**Bahareh Kaviani Baghbaderani**
+
+- GitHub: https://github.com/baharehkaviani75
+- LinkedIn: https://www.linkedin.com/in/bahareh-kaviani-baghbaderani/
